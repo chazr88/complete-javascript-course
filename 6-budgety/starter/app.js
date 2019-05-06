@@ -81,13 +81,17 @@ var budgetContoller = (function() {
 
 })();
 
+
+
 var UIController = (function() {
 
     var DOMstrings = {//This is an object that will hold the classes of our selectors. This keeps us from having to chamge them in multiple places
         inputType: '.add__type',
         inputDescription: '.add__description',
         inputValue: '.add__value',
-        inputButton: '.add__btn'
+        inputButton: '.add__btn',
+        incomeContainer: '.income__list',
+        expensesContainer: '.expenses__list'
     }
 
     return {//If there is anything we need to use in our app controller, we will put it in this return so we have access
@@ -99,12 +103,39 @@ var UIController = (function() {
             }
         },
 
+        addListItem: function(obj, type) {
+            var html, newHtml, element;
+
+            // Create HTML string with placeholder text
+            if(type === 'inc'){
+                element = DOMstrings.incomeContainer;//Here we select the element where the html will be inserted
+                html = '<div class="item clearfix" id="income-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
+            } else if (type ==='exp'){
+                element = DOMstrings.expensesContainer;
+                html = '<div class="item clearfix" id="expense-%id%"><div class="item__description">%description%</div>' +
+                '<div class="right clearfix"><div class="item__value">%value%</div><div class="item__percentage">21%</div>' +
+                '<div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
+            }
+
+            // Replace the placeholder text with read data
+            newHtml = html.replace('%id%', obj.id);
+            newHtml = newHtml.replace('%description%', obj.description);//Here now do newHtml = newHtml because our html was repalced with newHtml in the line above
+            newHtml = newHtml.replace('%value%', obj.value);
+
+
+            // Insert the HTML into the DOM
+            test = document.querySelector(element).insertAdjacentHTML('beforeend', newHtml);//Takes the element and html (based on if its income or expense) and inserts it into the html
+            
+        },
+
         getDomstrings: function() {//Returns our DOMstrings so our other controllers have access to them
             return DOMstrings;
         }
     };
 
 })();
+
+
 
 //This wiil be our app controler. It will allow communication between our other controllers
 //In this controller we can call the info in the other 2
@@ -125,17 +156,18 @@ var controller = (function(budgetCtrl, UICtrl) {//We rename them here incase we 
         });
     };
 
-    var ctrlAddItem = function() {
+    var ctrlAddItem = function() {//Tells other moduels what to do, gets data back, then sends data where it needs to go
         var input, newItem;
 
         // 1. Get the field input data
-        input = UICtrl.getinput();//This holds all of our input values
+        input = UICtrl.getinput();//Grabs our input data pased from get input, and stores for later use
 
         // 2. Add the item to the budget controller
-        newItem = budgetCtrl.addItem(input.type, input.description, input.value);//We grab all the input values and pass them to our addItem in budgetController
+        newItem = budgetCtrl.addItem(input.type, input.description, input.value);//We grab all the input values and sotre then an obj then pass them to our addItem in budgetController
 
         // 3. Add the item to the UI
-        
+        UICtrl.addListItem(newItem, input.type);
+
         // 4. Calculate the budget
 
         // 5. Display the budget
