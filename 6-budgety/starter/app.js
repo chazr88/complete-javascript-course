@@ -74,6 +74,7 @@ var budgetContoller = (function() {
             return newItem;//This gives our other module access to the newItem
         },
 
+        //This is for test purposes. It allows us to log the data by calling this in the console "budgetController.testing()" after an item is added
         testing: function() {
             console.log(data);
         }
@@ -99,7 +100,7 @@ var UIController = (function() {
             return{//To return all 3 values at the same time, we return them as an object.
                 type: document.querySelector(DOMstrings.inputType).value,// Will be either inc or exp
                 description: document.querySelector(DOMstrings.inputDescription).value,
-                value: document.querySelector(DOMstrings.inputValue).value
+                value: parseFloat(document.querySelector(DOMstrings.inputValue).value)//We use parseFloat to convert string into float
             }
         },
 
@@ -176,24 +177,38 @@ var controller = (function(budgetCtrl, UICtrl) {//We rename them here incase we 
         });
     };
 
+    var updateBudget = function () {
+
+        // 1. Calculate the budget
+
+        // 2. Return the budget
+
+        // 3. Display the budget
+
+    }
+
     var ctrlAddItem = function() {//Tells other moduels what to do, gets data back, then sends data where it needs to go
         var input, newItem;
 
         // 1. Get the field input data
         input = UICtrl.getinput();//Grabs our input data pased from get input, and stores for later use
 
-        // 2. Add the item to the budget controller
-        newItem = budgetCtrl.addItem(input.type, input.description, input.value);//We grab all the input values and sotre then an obj then pass them to our addItem in budgetController
+        //Keeps item from submitting with empty fields
+        if(input.description !== "" && !isNaN(input.value) && input.value > 0){
+            // 2. Add the item to the budget controller
+            newItem = budgetCtrl.addItem(input.type, input.description, input.value);//We grab all the input values and sotre then an obj then pass them to our addItem in budgetController
 
-        // 3. Add the item to the UI
-        UICtrl.addListItem(newItem, input.type);
+            // 3. Add the item to the UI
+            UICtrl.addListItem(newItem, input.type);
 
-        // 4. Clear the fields
-        UICtrl.clearFields();
+            // 4. Clear the fields
+            UICtrl.clearFields();
 
-        // 4. Calculate the budget
-
-        // 5. Display the budget
+            // 5. Calculate and update budget
+            updateBudget();
+        } else {
+            alert ("Fields cannot be empty, and value cannot be 0")
+        }
 
     }
 
