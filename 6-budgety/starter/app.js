@@ -118,7 +118,7 @@ var UIController = (function() {
             }
 
             // Replace the placeholder text with read data
-            newHtml = html.replace('%id%', obj.id);
+            newHtml = html.replace('%id%', obj.id);//id is our counter for each new income or expense
             newHtml = newHtml.replace('%description%', obj.description);//Here now do newHtml = newHtml because our html was repalced with newHtml in the line above
             newHtml = newHtml.replace('%value%', obj.value);
 
@@ -126,6 +126,26 @@ var UIController = (function() {
             // Insert the HTML into the DOM
             test = document.querySelector(element).insertAdjacentHTML('beforeend', newHtml);//Takes the element and html (based on if its income or expense) and inserts it into the html
             
+        },
+
+        //Clears the fields after item is added
+        clearFields: function() {
+            var fields, fieldsArr;
+
+            fields = document.querySelectorAll(DOMstrings.inputDescription + ', ' + DOMstrings.inputValue)//Grabs desc and input fields and gives them to us in a list
+
+            //We use the slice methond on the Array.prototype, then call .call on that passing fields as the .this
+            //This tricks the .slice into working on fields. 
+            fieldsArr = Array.prototype.slice.call(fields);
+
+            //Loops thru array changing the values of each item to ""
+            fieldsArr.forEach(function(current, index, array) {
+                current.value = "";
+            });
+
+            //Sets focus back on description after fields are clear, letting you immediatly add another item
+            fieldsArr[0].focus();
+
         },
 
         getDomstrings: function() {//Returns our DOMstrings so our other controllers have access to them
@@ -167,6 +187,9 @@ var controller = (function(budgetCtrl, UICtrl) {//We rename them here incase we 
 
         // 3. Add the item to the UI
         UICtrl.addListItem(newItem, input.type);
+
+        // 4. Clear the fields
+        UICtrl.clearFields();
 
         // 4. Calculate the budget
 
