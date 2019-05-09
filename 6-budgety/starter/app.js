@@ -37,6 +37,15 @@ var budgetContoller = (function() {
         this.value = value;
     };
 
+    //Calculates the total of either an expense or income, whichever is passes in. 
+    var calculateTotal = function(type) {
+        var sum = 0;
+        data.allItems[type].forEach(function(cur) {//Loops thru allItems expense or income array 
+            sum += cur.value;//Each loop adds its value to the sum
+        });
+        data.totals[type] = sum;//After loop is finished, put the final sum in the correct property... totals inc or exp.
+    };
+
     //This data structure allows us to neatly store all data given to us by the app
     var data = {
         allItems: {//Here we will store the items in arrays
@@ -47,7 +56,9 @@ var budgetContoller = (function() {
         totals: {//Here we will keep track of the totals
             exp: 0,
             inc: 0
-        }
+        },
+        budget: 0,
+        percentage: -1//Se set this to -1 because we dont want it to exist at first. 0 would make it 0%
 
     };
 
@@ -74,6 +85,32 @@ var budgetContoller = (function() {
             return newItem;//This gives our other module access to the newItem
         },
 
+        calculateBudget: function() {
+
+            //Calculate total income and expenses
+            calculateTotal('exp');
+            calculateTotal('inc');
+
+            //Calculate the budget: income - expenses
+            data.budget = data.totals.inc - data.totals.exp;//Calculates budget then stores it in bueget data property
+
+            //Calculate the percentage of income that we spent
+            if(data.totals.inc > 0){//Keeps percentage from trying to divide by 0 (if we add an expense before there is any income)
+                data.percentage = Math.round(data.totals.exp / data.totals.inc * 100);
+            } else {
+                data.percentage = -1;
+            }
+        },
+
+        getBueget: function() {
+            return {
+                budget: data.budget,
+                totalInc: data.totals.inc,
+                totalExp: data.totals.exp,
+                percentage: data.percentage
+            }
+        },
+
         //This is for test purposes. It allows us to log the data by calling this in the console "budgetController.testing()" after an item is added
         testing: function() {
             console.log(data);
@@ -86,13 +123,17 @@ var budgetContoller = (function() {
 
 var UIController = (function() {
 
-    var DOMstrings = {//This is an object that will hold the classes of our selectors. This keeps us from having to chamge them in multiple places
+    var DOMstrings = {//This is an object that will hold the classes of our selectors. This keeps us from having to chamge them in multiple places if HTML is changed 
         inputType: '.add__type',
         inputDescription: '.add__description',
         inputValue: '.add__value',
         inputButton: '.add__btn',
         incomeContainer: '.income__list',
-        expensesContainer: '.expenses__list'
+        expensesContainer: '.expenses__list',
+        budgetLabel: '.budget__value',
+        incomeLabel: '.budget__income--value',
+        expenseLabel: '.budget__expenses--value',
+        percentageLable: '.budget__expenses--percentage' 
     }
 
     return {//If there is anything we need to use in our app controller, we will put it in this return so we have access
@@ -149,6 +190,21 @@ var UIController = (function() {
 
         },
 
+        displayBudget: function(obj) {
+
+            document.querySelector(DOMstrings.budgetLabel).textContent = obj.budget;
+            document.querySelector(DOMstrings.incomeLabel).textContent = obj.totalInc;
+            document.querySelector(DOMstrings.expenseLabel).textContent = obj.totalExp;
+            
+            //Shows % sign in us if % is greater than 0. Else it shows dashes instead of -1 that would show if % does not exist. 
+            if(obj.percentage > 0){
+                document.querySelector(DOMstrings.percentageLable).textContent = obj.percentage + '%';
+            } else {
+                document.querySelector(DOMstrings.percentageLable).textContent = '---';
+            }
+
+        },
+
         getDomstrings: function() {//Returns our DOMstrings so our other controllers have access to them
             return DOMstrings;
         }
@@ -180,10 +236,13 @@ var controller = (function(budgetCtrl, UICtrl) {//We rename them here incase we 
     var updateBudget = function () {
 
         // 1. Calculate the budget
+        budgetCtrl.calculateBudget();
 
         // 2. Return the budget
+        var budget = budgetCtrl.getBueget();
 
         // 3. Display the budget
+        UICtrl.displayBudget(budget);//Calling display budget and passing the obj budget created a few lines above
 
     }
 
@@ -215,6 +274,13 @@ var controller = (function(budgetCtrl, UICtrl) {//We rename them here incase we 
     return {
         init: function() {//After adding our setupEventListeners to a function, it no longer automatically runs. This can be called to make them run
             console.log('Application has started');
+            //Sets everything to 0 on page load
+            UICtrl.displayBudget({//Here we pass an obj we create as the argument for this function
+                budget: 0,
+                totalInc: 0,
+                totalExp: 0,
+                percentage: -1
+            });
             setupEventListeners();
         }
     };
