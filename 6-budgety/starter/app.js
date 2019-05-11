@@ -66,10 +66,13 @@ var budgetContoller = (function() {
         addItem: function(type, des, val) {
             var newItem, ID;
 
-            //ID = last ID + 1
+            //[1 2 3 4 5], next ID = 6
+            //[1 2 3 4 6 8], next ID = 9
+            //ID = last ID +1
+
             //Create new Id
-            if(data.allItems[type].length > 0){//This makes sure our array starts out at 0
-            ID = data.allItems[type][data.allItems[type].length -1].id + 1;
+            if(data.allItems[type].length > 0){//This makes sure our array where we store starts out at 0
+            ID = data.allItems[type][data.allItems[type].length -1].id + 1;//Caclulates the next number by grabbing the id of the last item and adding 1
             } else {
                 ID = 0;
             }
@@ -83,6 +86,27 @@ var budgetContoller = (function() {
             //Push into our data structure
             data.allItems[type].push(newItem);
             return newItem;//This gives our other module access to the newItem
+        },
+
+        deleteItem: function(type, id) {
+            var ids, index
+
+            // id = 3
+            //data.allItems[type][id];//This will not work
+            // ids = [1 2 4 6 8]
+            //index of 6 = 3
+
+            //We use map to return a new array
+            //Gives us an array of just the ids of our data items
+            ids = data.allItems[type].map(function(current) {
+                return current.id;
+            });
+
+            index = ids.indexOf(id);//Gives us the index if the ids. Ex.. [1 2 4 6 8] if we wanted 6, that index would be 3
+
+            if(index !== -1){//This checks to see if it found the element. Remember -1 means it dont exist. This checks if it dont not exist.... if it exists.
+                data.allItems[type].splice(index, 1);//Starts removing elements at the specified index and keeps untill the number in the 2nd param is reached
+            }
         },
 
         calculateBudget: function() {
@@ -173,6 +197,14 @@ var UIController = (function() {
             
         },
 
+        deleteListItem: function(selectorID) {
+
+            var el = document.getElementById(selectorID);//Gets element with specified ID
+            el.parentNode.removeChild(el)//Selects the parent of that element, then uses remove child to remove the specified element.
+        
+        },
+
+
         //Clears the fields after item is added
         clearFields: function() {
             var fields, fieldsArr;
@@ -254,12 +286,12 @@ var controller = (function(budgetCtrl, UICtrl) {//We rename them here incase we 
         var input, newItem;
 
         // 1. Get the field input data
-        input = UICtrl.getinput();//Grabs our input data pased from get input, and stores for later use
+        input = UICtrl.getinput();//Grabs our input data pased from get input, and stores for later use as an object
 
         //Keeps item from submitting with empty fields
         if(input.description !== "" && !isNaN(input.value) && input.value > 0){
             // 2. Add the item to the budget controller
-            newItem = budgetCtrl.addItem(input.type, input.description, input.value);//We grab all the input values and sotre then an obj then pass them to our addItem in budgetController
+            newItem = budgetCtrl.addItem(input.type, input.description, input.value);//We grab all the input values and store then an obj then pass them to our addItem in budgetController
 
             // 3. Add the item to the UI
             UICtrl.addListItem(newItem, input.type);
@@ -278,20 +310,23 @@ var controller = (function(budgetCtrl, UICtrl) {//We rename them here incase we 
     var ctrlDeleteItem = function (event) {
         var itemID, splitID, type, ID;
 
-        itemID = event.target.parentNode.parentNode.parentNode.parentNode.id;
+        itemID = event.target.parentNode.parentNode.parentNode.parentNode.id;//Gets the specified parent (4 levels up) of the event target
 
         if(itemID) {
 
             //inc-1
             splitID = itemID.split('-');//We are splitting the string at the dash so we have acces to just the ID. Returns an array of all the items before and after the dash
             type = splitID[0];
-            ID = splitID[1];
+            ID = parseInt(splitID[1]);
 
             // 1. Delete the item from the data structure
+            budgetCtrl.deleteItem(type, ID);
 
             // 2. Delete the item from the UI
+            UIController.deleteListItem(itemID);//Passes in the full id of the element Ex... <div id="income-1"
 
             // 3. Update and show the new budget
+            updateBudget();
 
         }
         
