@@ -133,7 +133,8 @@ var UIController = (function() {
         budgetLabel: '.budget__value',
         incomeLabel: '.budget__income--value',
         expenseLabel: '.budget__expenses--value',
-        percentageLable: '.budget__expenses--percentage' 
+        percentageLable: '.budget__expenses--percentage',
+        container: '.container'
     }
 
     return {//If there is anything we need to use in our app controller, we will put it in this return so we have access
@@ -151,10 +152,12 @@ var UIController = (function() {
             // Create HTML string with placeholder text
             if(type === 'inc'){
                 element = DOMstrings.incomeContainer;//Here we select the element where the html will be inserted
-                html = '<div class="item clearfix" id="income-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
+                html = '<div class="item clearfix" id="inc-%id%"><div class="item__description">%description%</div>' +
+                '<div class="right clearfix"><div class="item__value">%value%</div><div class="item__delete"><button class="item__delete--btn">' +
+                '<i class="ion-ios-close-outline"></i></button></div></div></div>';
             } else if (type ==='exp'){
                 element = DOMstrings.expensesContainer;
-                html = '<div class="item clearfix" id="expense-%id%"><div class="item__description">%description%</div>' +
+                html = '<div class="item clearfix" id="exp-%id%"><div class="item__description">%description%</div>' +
                 '<div class="right clearfix"><div class="item__value">%value%</div><div class="item__percentage">21%</div>' +
                 '<div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
             }
@@ -219,7 +222,7 @@ var UIController = (function() {
 var controller = (function(budgetCtrl, UICtrl) {//We rename them here incase we rename the controller later, we will only have to change the name where its passed in
 
     var setupEventListeners = function() {//This wil hold our code dealing with our event listeners to keep our code clean and orgainzed
-        var DOM = UICtrl.getDomstrings();//Gets our DOMstrings from the UIController
+        var DOM = UICtrl.getDomstrings();//Gets our DOMstrings from the UIController...REMINDER in this module we call it DOM not DOMStrings because of this line
 
         document.querySelector(DOM.inputButton).addEventListener('click', ctrlAddItem);//We call DOM here instead of DOMstrings, because that is what it is called in this controller
 
@@ -229,8 +232,9 @@ var controller = (function(budgetCtrl, UICtrl) {//We rename them here incase we 
             if(event.keyCode === 13 || event.which === 13) {
                 ctrlAddItem();
             }
-    
         });
+
+        document.querySelector(DOM.container).addEventListener('click', ctrlDeleteItem);//Listens for click on the container area the calls ctrlDeleteItem function further down
     };
 
     var updateBudget = function () {
@@ -269,7 +273,29 @@ var controller = (function(budgetCtrl, UICtrl) {//We rename them here incase we 
             alert ("Fields cannot be empty, and value cannot be 0")
         }
 
-    }
+    };
+
+    var ctrlDeleteItem = function (event) {
+        var itemID, splitID, type, ID;
+
+        itemID = event.target.parentNode.parentNode.parentNode.parentNode.id;
+
+        if(itemID) {
+
+            //inc-1
+            splitID = itemID.split('-');//We are splitting the string at the dash so we have acces to just the ID. Returns an array of all the items before and after the dash
+            type = splitID[0];
+            ID = splitID[1];
+
+            // 1. Delete the item from the data structure
+
+            // 2. Delete the item from the UI
+
+            // 3. Update and show the new budget
+
+        }
+        
+    };
 
     return {
         init: function() {//After adding our setupEventListeners to a function, it no longer automatically runs. This can be called to make them run
